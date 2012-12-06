@@ -2,20 +2,24 @@ import os
 import pygeoip
 from threading import Lock
 
-GEOIP_DB_PATH = os.path.join(os.path.dirname(__file__), 'GeoIPCity.dat')
+GEOIP_DB_PATH = os.path.join(os.path.dirname(__file__), 'GeoLiteCity.dat')
 gi = pygeoip.GeoIP(GEOIP_DB_PATH)
 gi_lock = Lock()
 
-def get_city_and_country(user_ip):
+def get_record(user_ip):
     try:
         gi_lock.acquire()
         record = gi.record_by_addr(user_ip)
     except pygeoip.GeoIPError:
-        return '', ''
+        record = {}
     finally:
         gi_lock.release()
 
-    if record is None:
+    return record if record is not None else {}
+
+def get_city_and_country(user_ip):
+    record = get_record(user_ip)
+    if not record:
         return '', ''
 
     country_code = record.get('country_code')
